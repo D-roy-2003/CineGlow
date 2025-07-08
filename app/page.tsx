@@ -23,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import ShinyText from "@/components/ShinyText"
 import TiltedCard from "@/components/TiltedCard"
+import dynamic from "next/dynamic"
 
 // Demo data matching the reference images
 const demoMovies = [
@@ -255,7 +256,7 @@ const popularGenres = ["Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Romance
 const trendingSearches = ["The Last of Us", "House of the Dragon", "Breaking Bad"]
 const recentSearches = ["Game of Thrones", "Star Wars", "The Office"]
 
-export default function HomePage() {
+function HomePageComponent() {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeFilter, setActiveFilter] = useState("All")
   const [searchResults, setSearchResults] = useState<any[]>([])
@@ -264,11 +265,11 @@ export default function HomePage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [currentFeaturedIndex, setCurrentFeaturedIndex] = useState(2)
 
+  // Add auto-scroll for the new featured movie box
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentFeaturedIndex((prevIndex) => prevIndex + 1)
+      setCurrentFeaturedIndex((prev) => (prev + 1) % featuredMovies.length)
     }, 4000)
-
     return () => clearInterval(interval)
   }, [])
 
@@ -665,106 +666,60 @@ export default function HomePage() {
           </AnimatePresence>
 
           {/* Enhanced Featured Section with Auto-Scroll */}
+          {/* REMOVE OLD FEATURED MOVIE BOX */}
+          {/* NEW FEATURED MOVIE BOX */}
           {!hasSearched && (
-            <motion.section
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="mb-12"
-            >
-              <div className="relative overflow-hidden rounded-3xl">
-                <motion.div
-                  className="flex transition-transform duration-2000 ease-in-out"
-                  animate={{ x: `-${currentFeaturedIndex * 100}%` }}
-                  style={{ width: `${extendedFeaturedMovies.length * 100}%` }}
+            <section className="mb-12">
+              <div className="relative w-full max-w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl shadow-2xl flex flex-col lg:flex-row overflow-hidden min-h-[340px]">
+                {/* Left: Details */}
+                <div className="flex-1 flex flex-col justify-center p-10 gap-6 min-w-[320px]">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Badge className="bg-fuchsia-600 text-white text-sm px-3 py-1 rounded-full">{featuredMovies[currentFeaturedIndex % featuredMovies.length].type}</Badge>
+                  </div>
+                  <h2 className="text-4xl font-bold text-white mb-2">{featuredMovies[currentFeaturedIndex % featuredMovies.length].title}</h2>
+                  <div className="flex items-center gap-4 mb-2">
+                    <span className="flex items-center gap-1 text-gray-300 text-lg"><Calendar className="w-5 h-5" />{featuredMovies[currentFeaturedIndex % featuredMovies.length].year}</span>
+                    <Badge className="bg-slate-700 text-gray-200 text-base px-3 py-1 rounded-full">{featuredMovies[currentFeaturedIndex % featuredMovies.length].genre}</Badge>
+                    <span className="flex items-center gap-1 text-emerald-400 text-lg font-semibold"><Star className="w-5 h-5" />{featuredMovies[currentFeaturedIndex % featuredMovies.length].rating}</span>
+                  </div>
+                  <p className="text-gray-200 text-lg mb-4 max-w-2xl">{featuredMovies[currentFeaturedIndex % featuredMovies.length].description}</p>
+                  <div className="flex gap-4 mt-2">
+                    <Button className="bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white px-8 py-3 rounded-full text-lg font-semibold flex items-center gap-2 shadow-lg"><Play className="w-5 h-5" /> Watch Now</Button>
+                    <Button variant="ghost" className="bg-white/10 text-white px-8 py-3 rounded-full text-lg font-semibold flex items-center gap-2 border border-slate-600 cursor-not-allowed opacity-60" disabled><Star className="w-5 h-5" /> Add to Favorites</Button>
+                  </div>
+                </div>
+                {/* Right: Poster */}
+                <div className="flex items-center justify-center bg-slate-800/60 w-full lg:w-[340px] min-h-[340px]">
+                  <img
+                    src={featuredMovies[currentFeaturedIndex % featuredMovies.length].poster}
+                    alt={featuredMovies[currentFeaturedIndex % featuredMovies.length].title}
+                    className="object-cover rounded-2xl w-[260px] h-[340px] shadow-xl border border-slate-700"
+                  />
+                </div>
+                {/* Carousel Controls */}
+                <button
+                  onClick={() => setCurrentFeaturedIndex((prev) => (prev - 1 + featuredMovies.length) % featuredMovies.length)}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white z-20"
                 >
-                  {extendedFeaturedMovies.map((movie, index) => (
-                    <div key={`${movie.id}-${index}`} className="w-full flex-shrink-0">
-                      <Card className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-lg border-slate-700 overflow-hidden shadow-2xl shadow-violet-500/10">
-                        <CardContent className="p-0">
-                          <div className="flex flex-col lg:flex-row h-96">
-                            <div className="w-full lg:w-2/3 h-full bg-gradient-to-br from-orange-600/30 to-red-600/30 relative">
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                              <motion.div
-                                className="absolute inset-0 flex items-center justify-center"
-                                whileHover={{ scale: 1.1 }}
-                                transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                              >
-                                <Play className="w-20 h-20 text-white/60 drop-shadow-2xl" />
-                              </motion.div>
-                              <Badge className="absolute top-4 left-4 bg-fuchsia-500 text-white shadow-lg">
-                                Featured
-                              </Badge>
-                              <div className="absolute bottom-4 left-4 flex items-center gap-1">
-                                <Star className="w-4 h-4 text-amber-400 fill-current" />
-                                <span className="text-white font-medium">{movie.rating}</span>
-                              </div>
-                            </div>
-                            <div className="w-full lg:w-1/3 h-full bg-slate-800/30 backdrop-blur-sm p-6 lg:p-8 flex flex-col justify-center">
-                              <ShinyText
-                                text={movie.title}
-                                speed={6}
-                                className="text-2xl lg:text-3xl font-bold text-white mb-3"
-                              />
-                              <p className="text-gray-300 text-base lg:text-lg mb-4 leading-relaxed line-clamp-3">
-                                {movie.description}
-                              </p>
-                              <div className="flex items-center gap-3 mb-4">
-                                <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-sm">
-                                  {movie.type}
-                                </Badge>
-                                <Badge variant="outline" className="border-slate-600 text-slate-300 text-sm">
-                                  {movie.genre}
-                                </Badge>
-                                <span className="text-gray-400 flex items-center gap-1 text-sm">
-                                  <Calendar className="w-4 h-4" />
-                                  {movie.year}
-                                </span>
-                              </div>
-                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Button className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white px-6 py-2.5 rounded-xl text-base font-medium shadow-lg shadow-violet-500/25">
-                                  <Play className="w-4 h-4 mr-2" />
-                                  View Details
-                                </Button>
-                              </motion.div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  ))}
-                </motion.div>
-
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={() => setCurrentFeaturedIndex((prev) => (prev + 1) % featuredMovies.length)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-black/60 hover:bg-black/80 rounded-full flex items-center justify-center text-white z-20"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
                 {/* Carousel Indicators */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                  {featuredMovies.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentFeaturedIndex(index + 2)} // +2 to account for duplicated items
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                        (currentFeaturedIndex - 2) % featuredMovies.length === index
-                          ? "bg-fuchsia-500 w-8"
-                          : "bg-white/30 hover:bg-white/50"
-                      }`}
+                <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+                  {featuredMovies.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className={`w-3 h-3 rounded-full ${currentFeaturedIndex % featuredMovies.length === idx ? 'bg-fuchsia-500' : 'bg-white/30'} transition-all`}
                     />
                   ))}
                 </div>
-
-                {/* Navigation Arrows */}
-                <button
-                  onClick={() => setCurrentFeaturedIndex(currentFeaturedIndex - 1)}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-all duration-300 backdrop-blur-sm"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setCurrentFeaturedIndex(currentFeaturedIndex + 1)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-all duration-300 backdrop-blur-sm"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
               </div>
-            </motion.section>
+            </section>
           )}
 
           {/* Enhanced Popular Genres */}
@@ -963,3 +918,5 @@ export default function HomePage() {
     </div>
   )
 }
+
+export default dynamic(() => Promise.resolve(HomePageComponent), { ssr: false })
