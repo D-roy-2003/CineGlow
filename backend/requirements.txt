@@ -3,4 +3,7 @@ uvicorn
 pandas
 scikit-learn
 numpy
-pydantic 
+pydantic
+python-multipart
+requests
+python-dotenv
