@@ -409,8 +409,9 @@ function HomePageComponent() {
             transition={{ duration: 0.6 }}
           >
             {/* Enhanced Logo */}
-            <motion.div
-              className="relative"
+            <motion.a
+              href="/"
+              className="relative flex items-center"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
@@ -437,12 +438,12 @@ function HomePageComponent() {
                   }}
                 />
               </div>
-            </motion.div>
-            <ShinyText
-              text="CineGlow"
-              speed={6}
-              className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent"
-            />
+              <ShinyText
+                text="CineGlow"
+                speed={6}
+                className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent ml-2"
+              />
+            </motion.a>
           </motion.div>
 
           <motion.div
@@ -452,7 +453,7 @@ function HomePageComponent() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <motion.a
-              href="#"
+              href="/"
               className="text-gray-300 hover:text-white transition-colors relative group"
               whileHover={{ scale: 1.05 }}
             >
@@ -601,79 +602,35 @@ function HomePageComponent() {
                   </div>
                 ) : (
                   <div
-                    className={`grid gap-6 ${
-                      viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"
-                    }`}
+                    className={`grid gap-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-4`}
                   >
                     {filteredResults.map((movie, index) => (
-                      <motion.div
+                      <Card
                         key={movie.id}
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
+                        className="bg-gradient-to-b from-[#232a36] to-[#181c23] border border-[#2e3542] rounded-2xl shadow-none h-[340px] flex flex-col justify-between p-0"
                       >
-                        <TiltedCard>
-                          <Card className="bg-slate-800/50 backdrop-blur-sm border-slate-700 hover:bg-slate-700/50 transition-all duration-300 group cursor-pointer overflow-hidden rounded-2xl hover:shadow-xl hover:shadow-violet-500/10">
-                            <CardContent className="p-0">
-                              <div className={`${viewMode === "grid" ? "block" : "flex"}`}>
-                                <div
-                                  className={`${
-                                    viewMode === "grid" ? "aspect-[2/3]" : "w-32 h-48 flex-shrink-0"
-                                  } bg-gradient-to-br from-slate-700 to-slate-800 relative overflow-hidden`}
-                                >
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                  <motion.div
-                                    className="absolute inset-0 flex items-center justify-center"
-                                    whileHover={{ scale: 1.1 }}
-                                    transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                                  >
-                                    <Play className="w-12 h-12 text-white/60 group-hover:text-white/80 transition-colors drop-shadow-lg" />
-                                  </motion.div>
-                                  <div className="absolute top-3 left-3">
-                                    <Badge
-                                      className={`${
-                                        movie.type === "Movie"
-                                          ? "bg-fuchsia-500/90 text-white"
-                                          : "bg-cyan-500/90 text-white"
-                                      } backdrop-blur-sm shadow-lg`}
-                                    >
-                                      {movie.type}
-                                    </Badge>
-                                  </div>
-                                  <div className="absolute top-3 right-3">
-                                    <div
-                                      className={`flex items-center gap-1 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm ${getRatingColor(movie.rating)} shadow-lg`}
-                                    >
-                                      {[...Array(getRatingStars(movie.rating).full)].map((_, i) => (
-                                        <Star key={i} className="w-3 h-3 fill-current" />
-                                      ))}
-                                      {getRatingStars(movie.rating).half && (
-                                        <Star className="w-3 h-3 fill-current opacity-50" />
-                                      )}
-                                      <span className="text-xs font-medium ml-1">{movie.rating}</span>
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className={`p-4 ${viewMode === "list" ? "flex-1" : ""}`}>
-                                  <h3 className="font-bold text-white text-lg mb-2 line-clamp-1">{movie.title}</h3>
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <Badge variant="outline" className="text-xs border-slate-600 text-slate-300">
-                                      {movie.genre}
-                                    </Badge>
-                                    <span className="text-gray-400 text-sm flex items-center gap-1">
-                                      <Calendar className="w-3 h-3" />
-                                      {movie.year}
-                                    </span>
-                                  </div>
-                                  {viewMode === "list" && (
-                                    <p className="text-gray-400 text-sm line-clamp-2">{movie.description}</p>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </TiltedCard>
-                      </motion.div>
+                        <div className="relative flex-1 flex flex-col">
+                          {/* Top badges */}
+                          <div className="flex justify-between px-4 pt-4">
+                            <span className="bg-fuchsia-500 text-white text-xs font-semibold px-3 py-1 rounded-full">{movie.year}</span>
+                            <span className={`${movie.type === "Movie" ? "bg-fuchsia-500" : "bg-cyan-500"} text-white text-xs font-semibold px-3 py-1 rounded-full`}>
+                              {movie.type}
+                            </span>
+                          </div>
+                          {/* Play icon */}
+                          <div className="flex-1 flex items-center justify-center">
+                            <Play className="w-14 h-14 text-white/40" />
+                          </div>
+                        </div>
+                        {/* Bottom row: title and rating */}
+                        <div className="flex items-center justify-between px-4 pb-4">
+                          <span className="font-bold text-white text-base">{movie.title}</span>
+                          <span className="flex items-center gap-1 text-emerald-400 font-bold text-base">
+                            <Star className="w-4 h-4 fill-current" />
+                            {movie.rating}
+                          </span>
+                        </div>
+                      </Card>
                     ))}
                   </div>
                 )}
