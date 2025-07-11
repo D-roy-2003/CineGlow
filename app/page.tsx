@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge"
 import ShinyText from "@/components/ShinyText"
 import TiltedCard from "@/components/TiltedCard"
 import dynamic from "next/dynamic"
+import { fetchRecommendations, fetchMovieDetailsGemini } from "@/lib/utils"
 
 // Demo data matching the reference images
 const demoMovies = [
@@ -295,17 +296,32 @@ function HomePageComponent() {
     setIsLoading(true)
     setHasSearched(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Filter demo movies based on search
-    const filtered = demoMovies.filter(
-      (movie) =>
-        movie.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        movie.genre.toLowerCase().includes(searchTerm.toLowerCase()),
+    // Fetch recommendations from backend
+    let movieNames: string[] = []
+    try {
+      movieNames = await fetchRecommendations(searchTerm, 5)
+    } catch (e) {
+      setSearchResults([])
+      setIsLoading(false)
+      return
+    }
+    // For each movie, fetch Gemini details in parallel
+    const enriched = await Promise.all(
+      movieNames.map(async (title) => {
+        const details = await fetchMovieDetailsGemini(title)
+        return {
+          id: title,
+          title: details.title || title,
+          year: details.year || "",
+          genre: details.type === "TV" ? "TV" : "Movie",
+          rating: details.rating || 0,
+          type: details.type === "TV" ? "TV" : "Movie",
+          poster: "/placeholder.svg?height=400&width=300",
+          description: "",
+        }
+      })
     )
-
-    setSearchResults(filtered)
+    setSearchResults(enriched)
     setIsLoading(false)
   }
 
