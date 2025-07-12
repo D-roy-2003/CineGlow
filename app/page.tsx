@@ -24,7 +24,8 @@ import { Badge } from "@/components/ui/badge"
 import ShinyText from "@/components/ShinyText"
 import TiltedCard from "@/components/TiltedCard"
 import dynamic from "next/dynamic"
-import { fetchRecommendations, fetchMovieDetailsGemini } from "@/lib/utils"
+import { fetchRecommendations, fetchMovieDetailsGemini, fetchMovieDetailsTMDb } from "@/lib/utils"
+import Image from 'next/image';
 
 // Demo data matching the reference images
 const demoMovies = [
@@ -305,18 +306,17 @@ function HomePageComponent() {
       setIsLoading(false)
       return
     }
-    // For each movie, fetch Gemini details in parallel
+    // For each movie, fetch TMDb details in parallel
     const enriched = await Promise.all(
       movieNames.map(async (title) => {
-        const details = await fetchMovieDetailsGemini(title)
+        const details = await fetchMovieDetailsTMDb(title)
         return {
           id: title,
           title: details.title || title,
           year: details.year || "",
-          genre: details.type === "TV" ? "TV" : "Movie",
           rating: details.rating || 0,
-          type: details.type === "TV" ? "TV" : "Movie",
-          poster: "/placeholder.svg?height=400&width=300",
+          type: details.type || "Movie",
+          poster: details.poster || "/placeholder.svg?height=400&width=300",
           description: "",
         }
       })
@@ -607,28 +607,36 @@ function HomePageComponent() {
                     {filteredResults.map((movie, index) => (
                       <Card
                         key={movie.id}
-                        className="bg-gradient-to-b from-[#232a36] to-[#181c23] border border-[#2e3542] rounded-2xl shadow-none h-[340px] flex flex-col justify-between p-0"
+                        className="bg-gradient-to-b from-[#232a36] to-[#181c23] border border-[#2e3542] rounded-2xl shadow-none aspect-[2/3] flex flex-col justify-between p-0 relative overflow-hidden"
                       >
-                        <div className="relative flex-1 flex flex-col">
-                          {/* Top badges */}
+                        {/* Poster fills the card */}
+                        {movie.poster && (
+                          <Image
+                            src={movie.poster}
+                            alt={movie.title}
+                            fill
+                            className="object-cover"
+                            priority={index < 8}
+                          />
+                        )}
+                        {/* Overlay: badges, play icon, title, rating */}
+                        <div className="absolute inset-0 flex flex-col justify-between z-10">
                           <div className="flex justify-between px-4 pt-4">
                             <span className="bg-fuchsia-500 text-white text-xs font-semibold px-3 py-1 rounded-full">{movie.year}</span>
                             <span className={`${movie.type === "Movie" ? "bg-fuchsia-500" : "bg-cyan-500"} text-white text-xs font-semibold px-3 py-1 rounded-full`}>
                               {movie.type}
                             </span>
                           </div>
-                          {/* Play icon */}
                           <div className="flex-1 flex items-center justify-center">
-                            <Play className="w-14 h-14 text-white/40" />
+                            <Play className="w-14 h-14 text-white/70" />
                           </div>
-                        </div>
-                        {/* Bottom row: title and rating */}
-                        <div className="flex items-center justify-between px-4 pb-4">
-                          <span className="font-bold text-white text-base">{movie.title}</span>
-                          <span className="flex items-center gap-1 text-emerald-400 font-bold text-base">
-                            <Star className="w-4 h-4 fill-current" />
-                            {movie.rating}
-                          </span>
+                          <div className="flex items-center justify-between px-4 pb-4">
+                            <span className="font-bold text-white text-base drop-shadow">{movie.title}</span>
+                            <span className="flex items-center gap-1 text-emerald-400 font-bold text-base drop-shadow">
+                              <Star className="w-4 h-4 fill-current" />
+                              {movie.rating}
+                            </span>
+                          </div>
                         </div>
                       </Card>
                     ))}

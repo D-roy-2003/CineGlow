@@ -45,3 +45,41 @@ export async function fetchMovieDetailsGemini(title: string): Promise<{ title: s
   } catch {}
   return details;
 }
+
+export async function fetchMovieDetailsTMDb(title: string): Promise<{
+  title: string;
+  year: string;
+  rating: number;
+  type: string;
+  poster: string;
+}> {
+  const apiKey = process.env.TMDB_API_KEY || process.env.NEXT_PUBLIC_TMDB_API_KEY;
+  if (!apiKey) return { title, year: '', rating: 0, type: '', poster: '' };
+  // Search both movies and TV shows
+  const url = `https://api.themoviedb.org/3/search/multi?api_key=${apiKey}&query=${encodeURIComponent(title)}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.results || data.results.length === 0) {
+      return { title, year: '', rating: 0, type: '', poster: '' };
+    }
+    // Find the best match (first result)
+    const result = data.results[0];
+    let year = '';
+    if (result.release_date) year = result.release_date.slice(0, 4);
+    else if (result.first_air_date) year = result.first_air_date.slice(0, 4);
+    let type = result.media_type === 'tv' ? 'TV' : 'Movie';
+    let poster = result.poster_path
+      ? `https://image.tmdb.org/t/p/w500${result.poster_path}`
+      : '';
+    return {
+      title: result.title || result.name || title,
+      year,
+      rating: result.vote_average || 0,
+      type,
+      poster,
+    };
+  } catch {
+    return { title, year: '', rating: 0, type: '', poster: '' };
+  }
+}
