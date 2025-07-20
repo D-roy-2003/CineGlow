@@ -16,6 +16,8 @@ import {
   Zap,
   ChevronLeft,
   ChevronRight,
+  Menu,
+  User,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +29,7 @@ import dynamic from "next/dynamic"
 import { fetchRecommendations, fetchMovieDetailsGemini, fetchMovieDetailsTMDb, fetchFeaturedMoviesTMDb, fetchTrendingTodayTMDb, fetchTopRatedMoviesTMDb, fetchPopularTVShowsTMDb } from "@/lib/utils"
 import Image from 'next/image';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from '../components/AuthProvider';
 
 // Demo data matching the reference images
 const demoMovies = [
@@ -349,49 +352,28 @@ function HomePageComponent() {
   const popularTVEnd = Math.min(popularTVStart + cardsPerRow, popularTVLen);
   const visiblePopularTV = popularTVShows.slice(popularTVStart, popularTVEnd);
 
+  const { isLoggedIn, user, logout } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const avatarRef = useRef<HTMLButtonElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (
+        avatarRef.current && !avatarRef.current.contains(e.target as Node) &&
+        dropdownRef.current && !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [dropdownOpen]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 relative overflow-hidden">
-      {/* Enhanced Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-violet-500/20 to-fuchsia-500/20 rounded-full blur-3xl"
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 4,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl"
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.4, 0.7, 0.4],
-          }}
-          transition={{
-            duration: 5,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "easeInOut",
-            delay: 1,
-          }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl"
-          animate={{
-            rotate: [0, 360],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
-        />
-      </div>
-
       {/* Enhanced Header */}
       <header className="relative z-10 p-4 lg:p-6">
         <nav className="flex items-center justify-between max-w-7xl mx-auto">
@@ -431,11 +413,11 @@ function HomePageComponent() {
                   }}
                 />
               </div>
-              <ShinyText
-                text="CineGlow"
-                speed={6}
+            <ShinyText
+              text="CineGlow"
+              speed={6}
                 className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent ml-2"
-              />
+            />
             </motion.a>
           </motion.div>
 
@@ -469,6 +451,98 @@ function HomePageComponent() {
               Favorites
               <motion.div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 group-hover:w-full transition-all duration-300" />
             </motion.a>
+            {/* User avatar or Sign In button */}
+            {isLoggedIn && user ? (
+              <div className="relative ml-4">
+                <button
+                  ref={avatarRef}
+                  onClick={() => setDropdownOpen((open) => !open)}
+                  className="w-11 h-11 rounded-full bg-gradient-to-br from-violet-500 via-fuchsia-500 to-cyan-500 flex items-center justify-center text-white font-bold text-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  aria-label="User menu"
+                >
+                  {user.username
+                    ? user.username.slice(0, 2).toUpperCase()
+                    : user.email
+                    ? user.email[0].toUpperCase()
+                    : <User className="w-6 h-6" />}
+                </button>
+                {dropdownOpen && (
+                  <div
+                    ref={dropdownRef}
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: '110%',
+                      width: 180,
+                      background: '#181c23',
+                      borderRadius: 12,
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+                      zIndex: 9999,
+                      padding: 8,
+                      border: '1px solid #2e3542',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    <button
+                      style={{
+                        padding: '12px',
+                        color: '#fff',
+                        background: 'none',
+                        border: 'none',
+                        borderRadius: '8px',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: 16,
+                        marginBottom: 4,
+                        transition: 'background 0.2s',
+                      }}
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        window.location.href = '/profile';
+                      }}
+                      onMouseOver={e => (e.currentTarget.style.background = '#232a36')}
+                      onMouseOut={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      Profile
+                    </button>
+                    <button
+                      style={{
+                        padding: '12px',
+                        color: '#fff',
+                        background: 'none',
+                        border: 'none',
+                        borderRadius: '8px',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: 16,
+                        transition: 'background 0.2s',
+                      }}
+                      onClick={() => {
+                        logout();
+                        localStorage.clear();
+                        setDropdownOpen(false);
+                        window.location.reload();
+                      }}
+                      onMouseOver={e => (e.currentTarget.style.background = '#232a36')}
+                      onMouseOut={e => (e.currentTarget.style.background = 'none')}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <motion.a
+                href="/login"
+                className="ml-4 px-6 py-2 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-semibold shadow-lg hover:from-fuchsia-500 hover:to-violet-500 transition-colors"
+                whileHover={{ scale: 1.05 }}
+              >
+                Sign In
+              </motion.a>
+            )}
           </motion.div>
         </nav>
       </header>
@@ -516,23 +590,23 @@ function HomePageComponent() {
 
             {/* Enhanced Filter Tabs: Only show after search */}
             {hasSearched && (
-              <div className="flex items-center justify-center gap-2 mb-6">
-                {["All", "Movies", "TV Shows"].map((filter) => (
-                  <motion.div key={filter} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      onClick={() => setActiveFilter(filter)}
-                      variant={activeFilter === filter ? "default" : "ghost"}
-                      className={`px-6 py-3 rounded-full transition-all duration-300 ${
-                        activeFilter === filter
-                          ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/25"
-                          : "bg-slate-800/50 text-gray-300 hover:bg-slate-700/50 hover:text-white border border-slate-700/50"
-                      }`}
-                    >
-                      {filter}
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
+            <div className="flex items-center justify-center gap-2 mb-6">
+              {["All", "Movies", "TV Shows"].map((filter) => (
+                <motion.div key={filter} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    onClick={() => setActiveFilter(filter)}
+                    variant={activeFilter === filter ? "default" : "ghost"}
+                    className={`px-6 py-3 rounded-full transition-all duration-300 ${
+                      activeFilter === filter
+                        ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/25"
+                        : "bg-slate-800/50 text-gray-300 hover:bg-slate-700/50 hover:text-white border border-slate-700/50"
+                    }`}
+                  >
+                    {filter}
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
             )}
           </motion.div>
 
@@ -801,27 +875,27 @@ function HomePageComponent() {
                                     priority={index < 8}
                                   />
                                 )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                <motion.div
-                                  className="absolute inset-0 flex items-center justify-center"
-                                  whileHover={{ scale: 1.1 }}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                  <motion.div
+                                    className="absolute inset-0 flex items-center justify-center"
+                                    whileHover={{ scale: 1.1 }}
                                   transition={{ type: 'spring', stiffness: 400, damping: 10 }}
                                   style={{ willChange: 'transform' }}
-                                >
-                                  <Play className="w-12 h-12 text-white/60 group-hover:text-white/80 transition-colors drop-shadow-lg" />
-                                </motion.div>
-                                <div className="absolute top-3 left-3">
+                                  >
+                                    <Play className="w-12 h-12 text-white/60 group-hover:text-white/80 transition-colors drop-shadow-lg" />
+                                  </motion.div>
+                                  <div className="absolute top-3 left-3">
                                   <Badge className="bg-fuchsia-500/90 text-white text-xs shadow-lg">{movie.year}</Badge>
                                 </div>
                                 <div className="absolute top-3 right-3">
-                                  <Badge
-                                    className={`${
+                                    <Badge
+                                      className={`${
                                       movie.type === "Movie" ? "bg-fuchsia-500/90 text-white" : "bg-cyan-500/90 text-white"
                                     } text-xs shadow-lg`}
-                                  >
-                                    {movie.type}
-                                  </Badge>
-                                </div>
+                                    >
+                                      {movie.type}
+                                    </Badge>
+                                  </div>
                                 <div className="absolute bottom-3 left-3 right-3">
                                   <h4 className="font-bold text-white text-sm mb-1 line-clamp-1">{movie.title}</h4>
                                   <div className="flex items-center justify-between">
@@ -839,8 +913,8 @@ function HomePageComponent() {
                                     <div className={`flex items-center gap-1 ${getRatingColor(movie.rating)}`}> 
                                       <Star className="w-3 h-3 fill-current" />
                                       <span className="text-xs font-medium">{movie.rating}</span>
-                                    </div>
                                   </div>
+                                </div>
                                 </div>
                               </div>
                             </CardContent>
@@ -861,8 +935,8 @@ function HomePageComponent() {
                   <ChevronRight className="w-6 h-6" />
                 </button>
               </div>
-            </motion.section>
-          )}
+              </motion.section>
+            )}
 
           {/* Top Rated Movies Section */}
           {!hasSearched && (
@@ -913,7 +987,7 @@ function HomePageComponent() {
                     }}
                   >
                     {topRatedMovies.map((movie: any, index: number) => (
-                      <motion.div
+                <motion.div
                         key={movie.id}
                         className={
                           `flex-shrink-0 w-1/2 lg:w-1/4`
@@ -927,7 +1001,7 @@ function HomePageComponent() {
                             className="bg-slate-800/50 backdrop-blur-sm border-slate-700 hover:bg-slate-700/50 transition-all duration-300 group cursor-pointer overflow-hidden rounded-2xl shadow-lg hover:shadow-violet-500/10 will-change-transform"
                             style={{ boxShadow: undefined }}
                           >
-                            <CardContent className="p-0">
+                        <CardContent className="p-0">
                               <div className="aspect-[2/3] bg-gradient-to-br from-slate-700 to-slate-800 relative overflow-hidden">
                                 {movie.poster && (
                                   <Image
@@ -939,20 +1013,20 @@ function HomePageComponent() {
                                   />
                                 )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                <motion.div
-                                  className="absolute inset-0 flex items-center justify-center"
-                                  whileHover={{ scale: 1.1 }}
+                              <motion.div
+                                className="absolute inset-0 flex items-center justify-center"
+                                whileHover={{ scale: 1.1 }}
                                   transition={{ type: 'spring', stiffness: 400, damping: 10 }}
                                   style={{ willChange: 'transform' }}
-                                >
+                              >
                                   <Play className="w-12 h-12 text-white/60 group-hover:text-white/80 transition-colors drop-shadow-lg" />
-                                </motion.div>
+                              </motion.div>
                                 <div className="absolute top-3 left-3">
                                   <Badge className="bg-fuchsia-500/90 text-white text-xs shadow-lg">{movie.year}</Badge>
-                                </div>
+                              </div>
                                 <div className="absolute top-3 right-3">
                                   <Badge className="bg-fuchsia-500/90 text-white text-xs shadow-lg">{movie.type}</Badge>
-                                </div>
+                            </div>
                                 <div className="absolute bottom-3 left-3 right-3">
                                   <h4 className="font-bold text-white text-sm mb-1 line-clamp-1">{movie.title}</h4>
                                   <div className="flex items-center justify-between">
@@ -966,20 +1040,20 @@ function HomePageComponent() {
                                           transition={{ delay: i * 0.1, duration: 0.3 }}
                                         />
                                       ))}
-                                    </div>
+                              </div>
                                     <div className={`flex items-center gap-1 ${getRatingColor(movie.rating)}`}> 
                                       <Star className="w-3 h-3 fill-current" />
                                       <span className="text-xs font-medium">{movie.rating}</span>
                                     </div>
                                   </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                         </TiltedCard>
-                      </motion.div>
-                    ))}
-                  </div>
+                </motion.div>
+                  ))}
+                </div>
                 </div>
                 {/* Right Arrow */}
                 <button
@@ -1050,7 +1124,7 @@ function HomePageComponent() {
                           `flex-shrink-0 w-1/2 lg:w-1/4`
                         }
                         initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
+                    animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.9 + index * 0.1 }}
                       >
                         <TiltedCard>
