@@ -44,3 +44,4 @@ backend/MLmodel_training/myvenv/
 next-env.d.ts
 
 
+.env
